@@ -114,7 +114,6 @@ tripEx[id] = !tripEx[id]
         const tripEx = {...expanded};
         tripEx[el._id] = false;
         setExpanded(tripEx);
-        return el;
       }) 
     });
     document.removeEventListener("keyup", (x) => {
@@ -134,7 +133,7 @@ tripEx[id] = !tripEx[id]
         );
       }
     });
-  }, [expanded]);
+  }, []);
   const handleDelete = (id) => {
     API.deleteTrip(id)
       .then((_) => {
@@ -174,6 +173,7 @@ tripEx[id] = !tripEx[id]
             <CardHeader
               titleTypographyProps={{ variant: "h4" }}
               title={`${trip.startCity}, ${trip.startState} - ${trip.destinationCity}, ${trip.destinationState}`}
+
             />
             <CardActions disableSpacing>
               <IconButton aria-label="add to favorites">
@@ -207,7 +207,16 @@ tripEx[id] = !tripEx[id]
                   className="distance"
                   style={styles.distance}
                 >
-                  Estimated Distance: {trip.distance} mi{" "}
+                  Expected Trip Date: {trip.tripDate}
+
+                </Typography>
+                <Typography
+                  paragraph
+                  className="distance"
+                  style={styles.distance}
+                >
+                  Estimated Distance: {trip.distance} mi
+
                 </Typography>
               </CardContent>
               <Divider variant="inset" />
@@ -240,3 +249,7 @@ tripEx[id] = !tripEx[id]
 };
 
 export default PastTrip;
+
+
+
+

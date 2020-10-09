@@ -8,9 +8,12 @@ import Paper from "@material-ui/core/Paper";
 import Fab from "@material-ui/core/Fab";
 import NavigationIcon from "@material-ui/icons/Navigation";
 import "../Map/Map";
+import "./EditTrip.css";
+
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Header from "../Appbar/AppBar";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -43,16 +46,18 @@ const MyFab = styled(Fab)({
 export default function EditTrip() {
   const classes = useStyles();
   const { map, setMap } = useContext(MapContext);
-  const [setOneTripState] = useState([]);
+  const [oneTripState, setOneTripState] = useState([]);
   const { id } = useParams();
   const [double, setDouble] = useState(false);
+  const [tripDate, setTripDate] = useState(null);
+
   const heandler = () => {
     setTimeout(() => setDouble(false), 5000);
     setDouble(true);
   };
   useEffect(() => {
     const mapquest = window.L.mapquest;
-    mapquest.key = "TzrDot8zE5IyvIXUg7RP0ZiSWDnzqxCZ";
+    mapquest.key = process.env.REACT_APP_API_KEY;
     var baseLayer = window.L.mapquest.tileLayer("map");
     var map = window.L.mapquest.map("map", {
       center: [33.753746, -84.38633],
@@ -61,7 +66,7 @@ export default function EditTrip() {
     });
     API.getOneTrip(id).then((res) => {
       setOneTripState(res.data);
-      console.log(res.data);
+      setTripDate(res.data.tripDate);
       window.L.mapquest.directions().route({
         start: `${res.data.startCity} ${res.data.startState}`,
         end: `${res.data.destinationCity} ${res.data.destinationState}`,
@@ -95,14 +100,20 @@ export default function EditTrip() {
     map.addControl(mapquest.control());
 
     setMap(map);
-  }, [id, setMap, setOneTripState]);
+  }, []);
 
+  const handleChange = (e) => {
+    setTripDate(e.target.value);
+  };
   const updateTrip = () => {
     const address = map.directionsControl.directions.directionsRequest;
 
     if (address === undefined) {
       toast.error("You should enter at least two states with cities !");
-      heandler()
+      heandler();
+    } else if (tripDate === null) {
+      toast.error("You should enter your expected trip date !");
+      heandler();
     } else {
       const startStreet = address.locations[0].street;
       const startCity = address.locations[0].adminArea5;
@@ -118,11 +129,10 @@ export default function EditTrip() {
 
       API.getDirection(queryOne, queryTwo)
         .then((response) => {
-          const distance =Math.round( parseInt(response.data.route.distance));
-          console.log(distance)
+          const distance = Math.round(parseInt(response.data.route.distance));
           const time = response.data.route.formattedTime;
-          console.log(distance, time);
           setOneTripState(
+            tripDate,
             time,
             distance,
             startStreet,
@@ -136,6 +146,7 @@ export default function EditTrip() {
           );
           axios
             .put(`/api/trips/${id}`, {
+              tripDate,
               time,
               distance,
               startStreet,
@@ -153,12 +164,12 @@ export default function EditTrip() {
               setTimeout(() => window.location.replace("/PastTrips"), 2000);
             })
             .catch((err) => {
-              heandler()
+              heandler();
               console.log("this is error message  " + err);
             });
         })
         .catch((err) => {
-          heandler()
+          heandler();
           console.log("this is error message  " + err);
           toast.error("Sorry, error occurred! Try once more!");
         });
@@ -166,34 +177,49 @@ export default function EditTrip() {
   };
 
   return (
-    <div className={classes.root}>
-      <MyPaper>
-        <div id="map"></div>
-      </MyPaper>
-      <MyBox>
-        <MyFab
-          disabled={double}
-          variant="extended"
-          size="medium"
-          aria-label="add"
-          className={classes.margin}
-          onClick={(e) => updateTrip(e)}
-        >
-          <NavigationIcon />
-          Save Updates
-        </MyFab>
-        <MyFab
-          variant="extended"
-          size="medium"
-          aria-label="add"
-          className={classes.margin}
-          href="/PastTrips"
-        >
-          <NavigationIcon />
-          Cancel Updates
-        </MyFab>
-        <ToastContainer />
-      </MyBox>
+    <div>
+      <Header />
+      <div className={classes.root}>
+        <MyPaper >
+          <div id="map" ></div>
+        
+        </MyPaper>
+        <div>
+          <label for="date">Expected Trip Date:</label>
+          <br />
+          <input
+            type="date"
+            name="date"
+            value={tripDate}
+            tripDate={tripDate}
+            onChange={handleChange}
+          />
+        </div>
+        <MyBox>
+          <MyFab
+            disabled={double}
+            variant="extended"
+            size="medium"
+            aria-label="add"
+            className={classes.margin}
+            onClick={(e) => updateTrip(e)}
+          >
+            <NavigationIcon />
+            Save Updates
+          </MyFab>
+          <MyFab
+            variant="extended"
+            size="medium"
+            aria-label="add"
+            className={classes.margin}
+            href="/PastTrips"
+          >
+            <NavigationIcon />
+            Cancel Updates
+          </MyFab>
+          <ToastContainer />
+        </MyBox>
+      </div>
     </div>
   );
 }

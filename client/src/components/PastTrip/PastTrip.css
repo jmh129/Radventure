@@ -2,6 +2,15 @@
   transform: scale(1.1);
 }
 .specialTrip {
-  margin-left: 5%;
-  width: 90%;
+  margin-left: 25%;
+  /* add media query later */
+  width: 50%;
+  
+}
+
+@media all and (max-width: 768px) {
+  .specialTrip {
+    margin-left: 5%;
+    width: 90%;
+  }
 }

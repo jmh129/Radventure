@@ -46,15 +46,23 @@ export default function Map() {
   const classes = useStyles();
   const { map, setMap } = useContext(MapContext);
   const [double, setDouble] = useState(false);
+  const [tripDate, setTripDate] = useState(null);
+
   const heandler = () => {
     setTimeout(() => setDouble(false), 5000);
     setDouble(true);
   };
+  const handleChange = (e) => {
+    setTripDate(e.target.value);
+  };
+
   const saveTrip = () => {
     const address = map.directionsControl.directions.directionsRequest;
-
     if (address === undefined) {
       toast.error("You should enter at least two states with cities !");
+      heandler();
+    } else if (tripDate === null) {
+      toast.error("You should enter your expected trip date !");
       heandler();
     } else {
       const startStreet = address.locations[0].street;
@@ -67,14 +75,14 @@ export default function Map() {
       const destinationPostalCode = address.locations[1].postalCode;
       const queryOne = `${startCity},+${startState}`;
       const queryTwo = `${destinationCity},+${destinationState}`;
-
+   
       API.getDirection(queryOne, queryTwo)
         .then((response) => {
           const distance = Math.round(parseInt(response.data.route.distance));
-          console.log(distance);
           const time = response.data.route.formattedTime;
 
           const savedTrip = {
+            tripDate: tripDate,
             time: time,
             distance: distance,
             startCity: startCity,
@@ -92,6 +100,7 @@ export default function Map() {
               toast.success("You trip is successfully saved !");
               setDouble(true);
               setTimeout(() => window.location.replace("/PastTrips"), 2000);
+              setTripDate(null);
             })
             .catch((err) => {
               console.log("this is error message  " + err);
@@ -107,41 +116,41 @@ export default function Map() {
     }
   };
 
-  const previousTrip = () => {
-    if (
-      document.getElementsByClassName("form-wrap")[0].children[0].children[0]
-        .value
-    ) {
-      localStorage.setItem(
-        "start",
-        document.getElementsByClassName("form-wrap")[0].children[0].children[0]
-          .value
-      );
-      localStorage.setItem(
-        "destination",
-        document.getElementsByClassName("form-wrap")[1].children[0].children[0]
-          .value
-      );
-    }
-  };
+  // const previousTrip = () => {
+  //   if (
+  //     document.getElementsByClassName("form-wrap")[0].children[0].children[0]
+  //       .value
+  //   ) {
+  //     localStorage.setItem(
+  //       "start",
+  //       document.getElementsByClassName("form-wrap")[0].children[0].children[0]
+  //         .value
+  //     );
+  //     localStorage.setItem(
+  //       "destination",
+  //       document.getElementsByClassName("form-wrap")[1].children[0].children[0]
+  //         .value
+  //     );
+  //   }
+  // };
 
   useEffect(() => {
-    document.addEventListener("keyup", (x) => {
-      if (
-        document.getElementsByClassName("form-wrap")[0].children[0].children[0]
-      ) {
-        localStorage.setItem(
-          "start",
-          document.getElementsByClassName("form-wrap")[0].children[0]
-            .children[0].value
-        );
-        localStorage.setItem(
-          "destination",
-          document.getElementsByClassName("form-wrap")[1].children[0]
-            .children[0].value
-        );
-      }
-    });
+    // document.addEventListener("keyup", (x) => {
+    //   if (
+    //     document.getElementsByClassName("form-wrap")[0].children[0].children[0]
+    //   ) {
+    //     localStorage.setItem(
+    //       "start",
+    //       document.getElementsByClassName("form-wrap")[0].children[0]
+    //         .children[0].value
+    //     );
+    //     localStorage.setItem(
+    //       "destination",
+    //       document.getElementsByClassName("form-wrap")[1].children[0]
+    //         .children[0].value
+    //     );
+    //   }
+    // });
 
     const mapquest = window.L.mapquest;
     mapquest.key = process.env.REACT_APP_API_KEY;
@@ -174,18 +183,18 @@ export default function Map() {
       })
       .addTo(map);
 
-    if (startingPoint && destinationPoint) {
-      window.L.mapquest.directions().route({
-        start: startingPoint,
-        end: destinationPoint,
-      });
-      document.getElementsByClassName(
-        "form-wrap"
-      )[0].children[0].children[0].value = startingPoint;
-      document.getElementsByClassName(
-        "form-wrap"
-      )[1].children[0].children[0].value = destinationPoint;
-    }
+    // if (startingPoint && destinationPoint) {
+    //   window.L.mapquest.directions().route({
+    //     start: startingPoint,
+    //     end: destinationPoint,
+    //   });
+    //   document.getElementsByClassName(
+    //     "form-wrap"
+    //   )[0].children[0].children[0].value = startingPoint;
+    //   document.getElementsByClassName(
+    //     "form-wrap"
+    //   )[1].children[0].children[0].value = destinationPoint;
+    // }
 
     mapquest.geocodingControl().addTo(map);
 
@@ -194,18 +203,30 @@ export default function Map() {
     setMap(map);
 
     //Return function
-    return () => {
-      window.removeEventListener("keyup", previousTrip);
-    };
-  }, [setMap]);
+    // return () => {
+    //   window.removeEventListener("keyup", previousTrip);
+    // };
+  }, []);
 
   return (
-    <div className={classes.root}>
-      <MyPaper>
-        <div id="map"></div>
+    <div  className={classes.root}>
+
+      <MyPaper >
+        <div id="map" ></div>
       </MyPaper>
+      <div id="dates">
+        <label htmlFor="date">Expected Trip Date:</label>
+        <br />
+        <input
+          type="date"
+          name="date"
+          tripDate={tripDate}
+          onChange={handleChange}
+        />
+      </div>
       <MyBox>
         <div>
+          
           <MyFab
             disabled={double}
             variant="extended"

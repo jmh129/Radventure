@@ -11,6 +11,12 @@ import ConfirmModal from "../ConfirmModal/ConfirmModal";
 import Container from "@material-ui/core/Container";
 import { CardContent } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import Header from "../Appbar/AppBar";
+import "./ViewOneTrip.css";
+import AddToCalendar from "react-add-to-calendar";
+import "fa-icons";
+import Select from '@material-ui/core/Select';
+
 
 const useStyles = makeStyles({
   root: {
@@ -23,17 +29,32 @@ const styles = {
     background: "#02361C",
     color: "white",
     justifyContent: "center",
+    marginLeft: "25px",
+    marginTop: "15px",
   },
   DeleteButtonStyle: {
     background: "red",
+    marginLeft: "25px",
+    marginTop: "15px",
   },
   UpdateButtonStyle: {
     background: "#FFC107",
+    marginLeft: "25px",
+    marginTop: "15px",
+    textDecoration: "none !important",
   },
 };
 
 const ViewOneTrip = () => {
   const [oneTripState, setOneTripState] = useState([]);
+  const [event, setEvent] = React.useState({
+    title: ``,
+    description: ``,
+    location: "",
+    startTime: ``,
+    endTime: ``,
+  });
+
   const { id } = useParams();
   const [open, setOpen] = React.useState(false);
   const [activeTrip, setActiveTrip] = React.useState(null);
@@ -51,8 +72,17 @@ const ViewOneTrip = () => {
   useEffect(() => {
     API.getOneTrip(id).then((res) => {
       setOneTripState(res.data);
+      setEvent({
+        title: `Trip: ${res.data.startCity} ${res.data.startState} - ${res.data.destinationCity} ${res.data.destinationState}  `,
+        description: `Trip Datails!
+        Expected trip distance: ${res.data.distance} mi
+        Expected trip time: ${res.data.time}`,
+        location: `${res.data.startCity} ${res.data.startState}`,
+        startTime: `${res.data.tripDate}T20:15:00-04:00`,
+        endTime: `${res.data.tripDate}T21:15:00-04:00`,
+      });
     });
-  }, [id]);
+  }, []);
   const handleDelete = (id) => {
     API.deleteTrip(id)
       .then((_) => {
@@ -62,79 +92,97 @@ const ViewOneTrip = () => {
       })
       .catch((err) => console.log(err));
   };
-
+  let icon = { "calendar-plus-o": "left" };
+  let items = [
+    { google: "Google Calendar" },
+    { apple: "Apple Calendar" },
+    { outlook: "Outlook" },
+    { outlookcom: "Outlook.com" },
+    { yahoo: "Yahoo" },
+  ];
   return (
-    <Container maxWidth="sm">
-      <Card className={classes.root}>
-        <CardContent>
-          <div>
-            <div key={oneTripState._id}>
-              <form>
-                <div className="container">
-                  <h1 className="text-center welcome">Details of Your Trip!</h1>
+    <div>
+      <Header />
 
-                  <h2> Start City Information</h2>
-                  <h3>
-                    {" "}
-                    <strong>Address:</strong> {oneTripState.startStreet}{" "}
-                    {oneTripState.startCity}, {oneTripState.startState},{" "}
-                    {oneTripState.startPostalCode}
-                  </h3>
-                  <h2> Destination City Information</h2>
-                  <h3>
-                    {" "}
-                    <strong>Address:</strong> {oneTripState.destinationStreet}{" "}
-                    {oneTripState.destinationCity},{" "}
-                    {oneTripState.destinationState},{" "}
-                    {oneTripState.destinationPostalCode}
-                  </h3>
-                  <h5>-------------------------------</h5>
-                  <h4>Estimated Distance: {oneTripState.distance} mi </h4>
-                  <h4>Estimated Time: {oneTripState.time} </h4>
-
-                  <div>
-                    <Button
-                      id={oneTripState._id}
-                      onClick={() => handleOpen(oneTripState._id)}
-                      size="large"
-                      style={styles.DeleteButtonStyle}
-                    >
-                      Delete
-                    </Button>
-
-                    <Link to={`/PastTrips/${oneTripState._id}/edit`}>
+      <Container maxWidth="sm">
+        <Card className={classes.root} id="OneTripInfo">
+          <CardContent>
+            <div>
+              <div key={oneTripState._id}>
+                <form>
+                  <div className="container">
+                    <AddToCalendar
+                      event={event}
+                      displayItemIcons={false}
+                      buttonTemplate={icon}
+                      listItems={items}
+                    />
+                    <h1 className="text-center welcome">
+                      Details of Your Trip!
+                    </h1>
+                    <h2> Start City:</h2>
+                    <h3>
+                      {" "}
+                      <strong>Address:</strong> {oneTripState.startStreet}{" "}
+                      {oneTripState.startCity}, {oneTripState.startState},{" "}
+                      {oneTripState.startPostalCode}
+                    </h3>
+                    <h2> Destination City:</h2>
+                    <h3>
+                      {" "}
+                      <strong>Address:</strong> {oneTripState.destinationStreet}{" "}
+                      {oneTripState.destinationCity},{" "}
+                      {oneTripState.destinationState},{" "}
+                      {oneTripState.destinationPostalCode}
+                    </h3>
+                    <h5>-------------------------------</h5>
+                    <h4>Expected Trip Date: {oneTripState.tripDate} </h4>
+                    <h4>Estimated Distance: {oneTripState.distance} mi </h4>
+                    <h4>Estimated Time: {oneTripState.time} </h4>
+                    <div>
                       <Button
                         id={oneTripState._id}
-                        type="submit"
+                        onClick={() => handleOpen(oneTripState._id)}
                         size="large"
-                        style={styles.UpdateButtonStyle}
+                        style={styles.DeleteButtonStyle}
                       >
-                        Update
+                        Delete
                       </Button>
-                    </Link>
-                    <Button
-                      size="large"
-                      href="/pasttrips"
-                      style={styles.ButtonsStyle}
-                    >
-                      Back to Trips
-                    </Button>
-                    <ToastContainer />
+
+                      <Link to={`/PastTrips/${oneTripState._id}/edit`}>
+                        <Button
+                          id={oneTripState._id}
+                          type="submit"
+                          size="large"
+                          style={styles.UpdateButtonStyle}
+                        >
+                          Update
+                        </Button>
+                      </Link>
+                      <Button
+                        size="large"
+                        href="/pasttrips"
+                        style={styles.ButtonsStyle}
+                      >
+                        Back to Trips
+                      </Button>
+                      <ToastContainer />
+                    </div>
+                    <ConfirmModal
+                      open={open}
+                      handleDelete={handleDelete}
+                      handleClose={handleClose}
+                      handleOpen={handleOpen}
+                      id={activeTrip}
+                    />
                   </div>
-                  <ConfirmModal
-                    open={open}
-                    handleDelete={handleDelete}
-                    handleClose={handleClose}
-                    handleOpen={handleOpen}
-                    id={activeTrip}
-                  />
-                </div>
-              </form>
+                </form>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Container>
+          </CardContent>
+        </Card>
+      </Container>
+    </div>
   );
 };
 
